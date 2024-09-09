@@ -2,6 +2,9 @@ package com.sz.jvm.hotspot.src.share.vm.oops;
 
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @Author
  * @Date 2024-09-07 16:12
@@ -19,6 +22,23 @@ public class InstanceKlass {
     private byte[] constantPoolCount = new byte[2];
 
     private ConstantPool constantPool;
+
+    private int accessFlag;
+
+    private int thisClass;
+
+    private int superClass;
+
+    private int interfacesLength;
+    private List<InterfaceInfo> interfaceInfos = new ArrayList<>();
+
+    private int fieldsLength;
+    private List<FieldInfo> fieldInfos = new ArrayList<>();
+
+    private int methodLength;
+    private List<MethodInfo> methodInfos = new ArrayList<>();
+
+    private int attributeLength;
 
     public InstanceKlass() {
         this.constantPool = new ConstantPool();

@@ -1,7 +1,9 @@
 package com.sz.jvm.hotspot.src.share.vm.classfile;
 
 import com.sz.jvm.hotspot.src.share.vm.oops.ConstantPool;
+import com.sz.jvm.hotspot.src.share.vm.oops.FieldInfo;
 import com.sz.jvm.hotspot.src.share.vm.oops.InstanceKlass;
+import com.sz.jvm.hotspot.src.share.vm.oops.InterfaceInfo;
 import com.sz.jvm.hotspot.src.share.vm.tools.DataConverter;
 import com.sz.jvm.hotspot.src.share.vm.tools.JVMConstant;
 import com.sz.jvm.hotspot.src.share.vm.tools.Stream;
@@ -62,7 +64,116 @@ public class ClassFileParser {
        // index ++;
         index = parseConstantPool(bytes, klass, index);
 
+        byte[] b2arr;
+        // 类的访问权限 2B
+        b2arr = Stream.readBytes(bytes, index, 2);
+        index += 2;
+
+        klass.setAccessFlag(DataConverter.byteToInt(b2arr));
+
+        // 类名 2B
+        b2arr = Stream.readBytes(bytes, index, 2);
+        index += 2;
+        klass.setThisClass(DataConverter.byteToInt(b2arr));
+
+        // 父类名 2B
+        b2arr = Stream.readBytes(bytes, index, 2);
+        index += 2;
+        klass.setSuperClass(DataConverter.byteToInt(b2arr));
+
+        // 实现的接口个数 2B
+        b2arr = Stream.readBytes(bytes, index, 2);
+        index += 2;
+        klass.setInterfacesLength(DataConverter.byteToInt(b2arr));
+
+        //实现的接口
+        if(0 != klass.getInterfacesLength()) {
+            logger.info("开始解析实现的接口信息: ");
+            index = parseInterface(bytes, klass, index);
+        }
+
+        // 成员变量数量 2B
+        b2arr = Stream.readBytes(bytes, index, 2);
+        index += 2;
+        klass.setFieldsLength(DataConverter.byteToInt(b2arr));
+
+        // 成员变量
+        index = parseFields(bytes, klass, index);
+
+
+        // 方法数量 2B
+        b2arr = Stream.readBytes(bytes, index, 2);
+        index += 2;
+        klass.setMethodLength(DataConverter.byteToInt(b2arr));
+
+        //解析方法
+        index = parseMethods(bytes, klass, index);
+
+
+
         return null;
+    }
+
+    private static int parseMethods(byte[] bytes, InstanceKlass klass, int index) {
+        for (int i = 0; i < klass.getMethodLength(); i++) {
+
+        }
+        return 0;
+    }
+
+    private static int parseFields(byte[] bytes, InstanceKlass klass, int index) {
+        logger.info("解析属性:");
+        byte[] b2arr;
+        for (int i = 0; i < klass.getFieldsLength(); i++) {
+            FieldInfo fieldInfo = new FieldInfo();
+            klass.getFieldInfos().add(fieldInfo);
+
+            // access flag
+            b2arr = Stream.readBytes(bytes, index, 2);
+            index += 2;
+            fieldInfo.setAccessFlags(DataConverter.byteToInt(b2arr));
+
+            // name index
+            b2arr = Stream.readBytes(bytes, index, 2);
+            index += 2;
+            fieldInfo.setNameIndex(DataConverter.byteToInt(b2arr));
+
+            // descriptor index
+            b2arr = Stream.readBytes(bytes, index, 2);
+            index += 2;
+            fieldInfo.setDescriptorIndex(DataConverter.byteToInt(b2arr));
+
+            // attribute count
+            b2arr = Stream.readBytes(bytes, index, 2);
+            index += 2;
+            fieldInfo.setAttributesCount(DataConverter.byteToInt(b2arr));
+
+            if (0 != fieldInfo.getAttributesCount()) {
+                throw new Error("属性的attribute count != 0");
+            }
+
+            logger.info("\t第 " + i + " 个属性: access flag: " + fieldInfo.getAccessFlags()
+                    + ", name index: " + fieldInfo.getNameIndex()
+                    + ", descriptor index: " + fieldInfo.getDescriptorIndex()
+                    + ", attribute count: " + fieldInfo.getAttributesCount()
+            );
+
+        }
+        return index;
+    }
+
+    private static int parseInterface(byte[] bytes, InstanceKlass klass, int index) {
+        byte[] b2arr;
+        for (int i = 0; i < klass.getInterfacesLength(); i++) {
+            b2arr = Stream.readBytes(bytes, index, 2);
+            index += 2;
+            int value = DataConverter.byteToInt(b2arr);
+            String name = klass.getConstantPool().getInterfaceName(value);
+            InterfaceInfo interfaceInfo = new InterfaceInfo(value, name);
+            klass.getInterfaceInfos().add(interfaceInfo);
+            logger.info("\t 第 " + (i + 1) + " 个接口: " + name);
+        }
+        return index;
     }
 
     private static int parseConstantPool(byte[] bytes, InstanceKlass klass, int index) {

@@ -75,4 +75,11 @@ public class ConstantPool {
     public void setDataMap(Map<Integer, Object> dataMap) {
         this.dataMap = dataMap;
     }
+
+    public String getInterfaceName(int index) {
+        if (0 == index || index > length) {
+            return null;
+        }
+        return (String) getDataMap().get(getDataMap().get(index));
+    }
 }
