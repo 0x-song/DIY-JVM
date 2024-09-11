@@ -108,9 +108,61 @@ public class ClassFileParser {
         //解析方法
         index = parseMethods(bytes, klass, index);
 
+        // 属性数量
+        b2arr = Stream.readBytes(bytes, index, 2);
+        index += 2;
+        klass.setAttributeLength(DataConverter.byteToInt(b2arr));
 
+        logger.info("开始解析类的属性，数量: " + klass.getAttributeLength());
+        // 属性
+        for (int i = 0; i < klass.getAttributeLength(); i++) {
+            b2arr = Stream.readBytes(bytes, index, 2);
 
-        return null;
+            String attrName = (String) klass.getConstantPool().getDataMap().get(DataConverter.byteToInt(b2arr));
+            if (attrName.equals("SourceFile")) {
+                index = parseSourceFile(bytes, index, klass);
+            } else {
+                throw new Error("无法识别的类属性: " + attrName);
+            }
+        }
+
+        return klass;
+    }
+
+    private static int parseSourceFile(byte[] bytes, int index, InstanceKlass klass) {
+        byte[] u2Arr;
+        byte[] u4Arr;
+
+        AttributeInfo attributeInfo = new AttributeInfo();
+
+        klass.getAttributeInfos().add(attributeInfo);
+
+        // name index
+        u2Arr = Stream.readBytes(bytes, index, 2);
+        index += 2;
+
+        attributeInfo.setAttrNameIndex(DataConverter.byteToInt(u2Arr));
+
+        // length
+        u4Arr = Stream.readBytes(bytes, index, 4);
+        index += 4;
+
+        attributeInfo.setAttrLength(DataConverter.byteArrayToInt(u4Arr));
+
+        attributeInfo.initContainer();
+
+        // data
+        attributeInfo.setContainer(Stream.readBytes(bytes, index, 2));
+        index += 2;
+
+        logger.info("\t第 " + klass.getAttributeInfos().size() + " 个属性: " + klass.getConstantPool().getDataMap().get(attributeInfo.getAttrNameIndex())
+                + ", name index: " + attributeInfo.getAttrNameIndex()
+                + ", length: " + attributeInfo.getAttrLength()
+                + ", data: " + DataConverter.byteToInt(attributeInfo.getContainer())
+                + "( " + klass.getConstantPool().getDataMap().get(DataConverter.byteToInt(attributeInfo.getContainer())) + " )"
+        );
+
+        return index;
     }
 
     private static int parseMethods(byte[] bytes, InstanceKlass klass, int index) {
@@ -191,7 +243,7 @@ public class ClassFileParser {
                 b4arr = Stream.readBytes(bytes, index, 4);
                 index += 4;
 
-                attributeInfo.setCodeLength(DataConverter.byteToInt(b4arr));
+                attributeInfo.setCodeLength(DataConverter.byteArrayToInt(b4arr));
 
                 // code
                 BytecodeStream bytecodeStream = new BytecodeStream(methodInfo, attributeInfo);

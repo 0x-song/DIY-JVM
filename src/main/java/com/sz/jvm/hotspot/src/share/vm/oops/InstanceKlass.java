@@ -40,6 +40,9 @@ public class InstanceKlass {
 
     private int attributeLength;
 
+    private List<AttributeInfo> attributeInfos = new ArrayList<>();
+
+
     public InstanceKlass() {
         this.constantPool = new ConstantPool();
         constantPool.setKlass(this);
