@@ -29,6 +29,10 @@ public class BootClassLoader {
         return loadKlass(className);
     }
 
+    public static void setMainKlass(InstanceKlass mainKlass) {
+        BootClassLoader.mainKlass = mainKlass;
+    }
+
     private static InstanceKlass loadKlass(String className) {
 
         return loadKlass(className, true);

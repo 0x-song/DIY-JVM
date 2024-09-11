@@ -1,6 +1,10 @@
 package com.sz.jvm.hotspot.src.share.vm.oops;
 
+import com.sz.jvm.hotspot.src.share.vm.utilities.AccessFlags;
 import lombok.Data;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @Author
@@ -10,9 +14,14 @@ import lombok.Data;
 @Data
 public class MethodInfo {
 
+    private InstanceKlass belongKlass;
+
     private int nameIndex;
     private int descriptorIndex;
     private int attributesCount;
     private String methodName;
+    private AccessFlags accessFlags;
+
+    private List<CodeAttributeInfo> attributes = new ArrayList<>();
 
 }
