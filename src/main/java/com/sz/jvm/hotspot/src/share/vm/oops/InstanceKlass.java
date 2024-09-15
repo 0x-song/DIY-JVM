@@ -47,4 +47,9 @@ public class InstanceKlass {
         this.constantPool = new ConstantPool();
         constantPool.setKlass(this);
     }
+
+    @Override
+    public String toString() {
+        return "InstanceKlass{}";
+    }
 }
