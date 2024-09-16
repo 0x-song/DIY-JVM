@@ -24,4 +24,8 @@ public class MethodInfo {
 
     private List<CodeAttributeInfo> attributes = new ArrayList<>();
 
+    @Override
+    public String toString() {
+        return "MethodInfo{}";
+    }
 }

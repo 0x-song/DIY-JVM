@@ -25,4 +25,28 @@ public class JavaFrame extends Frame{
 
         ownerMethod = methodInfo;
     }
+
+    public StackValueCollection getLocals() {
+        return locals;
+    }
+
+    public void setLocals(StackValueCollection locals) {
+        this.locals = locals;
+    }
+
+    public StackValueCollection getStack() {
+        return stack;
+    }
+
+    public void setStack(StackValueCollection stack) {
+        this.stack = stack;
+    }
+
+    public MethodInfo getOwnerMethod() {
+        return ownerMethod;
+    }
+
+    public void setOwnerMethod(MethodInfo ownerMethod) {
+        this.ownerMethod = ownerMethod;
+    }
 }

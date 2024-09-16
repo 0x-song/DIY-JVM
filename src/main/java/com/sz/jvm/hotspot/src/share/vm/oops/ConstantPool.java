@@ -82,4 +82,58 @@ public class ConstantPool {
         }
         return (String) getDataMap().get(getDataMap().get(index));
     }
+
+    public String getClassNameByFieldInfo(int index) {
+        // 获取Class信息在常量池中的index
+        int data = (int) getDataMap().get(index);
+        int classIndex = data >> 16;
+
+        // 获取Class全限定名的index
+        int classNameIndex = (int) getDataMap().get(classIndex);
+
+        return (String) getDataMap().get(classNameIndex);
+    }
+
+    public String getFieldName(int index) {
+        // 获取NameAndType在常量池中的index
+        int data = (int) getDataMap().get(index);
+        int i = data & 0xFF;
+
+        int nameAndType = (int) getDataMap().get(i);
+        i = nameAndType >> 16;
+
+        return (String) getDataMap().get(i);
+
+    }
+
+    public String getClassNameByMethodInfo(int operand) {
+
+        return getClassNameByFieldInfo(operand);
+    }
+
+    public String getMethodNameByMethodInfo(int operand) {
+
+        // 获取Methodinfo在常量池中的index
+        int i = (int) getDataMap().get(operand);
+        int nameAndTypeIndex = i & 0xff;
+
+        // 获取NameAndType的值
+        int data = (int) getDataMap().get(nameAndTypeIndex);
+        i = data >> 16;
+
+        return (String) getDataMap().get(i);
+    }
+
+    public String getDescriptorNameByMethodInfo(int operand) {
+
+        // 获取Methodinfo在常量池中的index
+        int i = (int) getDataMap().get(operand);
+        int nameAndTypeIndex = i & 0xff;
+
+        // 获取NameAndType的值
+        int data = (int) getDataMap().get(nameAndTypeIndex);
+        i = data & 0xFF;
+
+        return (String) getDataMap().get(i);
+    }
 }
