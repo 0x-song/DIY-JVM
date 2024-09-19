@@ -18,7 +18,7 @@ public class BootClassLoader {
 
     private static Map<String, InstanceKlass> klassLoaderData = new HashMap<>();
 
-    private static final String searchPath = "E:/jvm/diy-jvm/target/classes/";
+    private static final String searchPath = "E:/WD/diy/JVM2/target/classes/";
 
     private static final String SUFFIX = ".class";
 

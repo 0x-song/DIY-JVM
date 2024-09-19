@@ -153,10 +153,23 @@ public class BytecodeInterpreter {
                     }else {
                         //如果是自定义类，待实现
                     }
-
-
-
                     break;
+                }
+                //将常量池中的long、double类型的数据推送至栈顶
+                case Bytecodes.LDC2_W:{
+                    System.out.println("执行指令: LDC2_W");
+                    int operand = code.getUnsignedShort();
+                    int tag = methodInfo.getBelongKlass().getConstantPool().getTag()[operand];
+                    if(ConstantPool.JVM_CONSTANT_Long == tag){
+                        long l = (long) methodInfo.getBelongKlass().getConstantPool().getDataMap().get(tag);
+
+                    }else if(ConstantPool.JVM_CONSTANT_Double == tag){
+                        double d = (double) methodInfo.getBelongKlass().getConstantPool().getDataMap().get(tag);
+
+                    }else {
+                        throw new Error("格式不支持");
+                    }
+
                 }
                 default:{
                     throw new Error("无效指令");
