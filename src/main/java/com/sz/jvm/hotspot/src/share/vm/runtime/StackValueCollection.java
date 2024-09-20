@@ -1,9 +1,13 @@
 package com.sz.jvm.hotspot.src.share.vm.runtime;
 
+import com.sz.jvm.hotspot.src.share.vm.tools.DataConverter;
+import com.sz.jvm.hotspot.src.share.vm.utilities.BasicType;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Stack;
 
 /**
@@ -56,4 +60,38 @@ public class StackValueCollection {
         return getLocals()[index];
     }
 
+    public void pushDouble(double d) {
+        byte[] bytes = DataConverter.doubleToByte(d);
+        ByteBuffer buffer = ByteBuffer.wrap(bytes,0,8);
+        push(new StackValue(BasicType.T_DOUBLE, buffer.getInt(0)));
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        push(new StackValue(BasicType.T_DOUBLE, buffer.getInt(4)));
+    }
+
+    public StackValue[] popDouble() {
+        StackValue[] result = new StackValue[2];
+        result[0] = pop();
+        result[1] = pop();
+        return result;
+    }
+
+    /**
+     * 因为一个double占两个单元
+     * 所以取的时候要连续取两个，并合并成double
+     * @return
+     */
+    public double popDouble2() {
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+
+        StackValue value1 = pop();  // 后4字节
+        StackValue value2 = pop();  // 前4字节
+
+        if (value1.getType() != BasicType.T_DOUBLE || value2.getType() != BasicType.T_DOUBLE) {
+            throw new Error("类型检查不通过");
+        }
+
+        buffer.putInt(value2.getVal(), value1.getVal());
+
+        return buffer.getDouble();
+    }
 }

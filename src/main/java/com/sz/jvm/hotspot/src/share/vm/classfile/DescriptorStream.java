@@ -92,7 +92,7 @@ public class DescriptorStream {
 
                     break;
                 case BasicType.T_DOUBLE:
-                    values[i] = javaFrame.getStack().pop().getVal();
+                    values[i] = javaFrame.getStack().popDouble2();
 
                     break;
                 case BasicType.T_ARRAY:

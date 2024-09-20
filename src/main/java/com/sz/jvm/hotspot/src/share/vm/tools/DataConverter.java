@@ -60,4 +60,16 @@ public class DataConverter {
 
         return value;
     }
+
+    public static byte[] doubleToByte(double d) {
+        long value = Double.doubleToRawLongBits(d);
+
+        byte[] byteRet = new byte[8];
+
+        for (int i = 0; i < 8; i++) {
+            byteRet[i] = (byte) ((value >> 8 * i) & 0xff);
+        }
+
+        return byteRet;
+    }
 }

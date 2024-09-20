@@ -157,19 +157,41 @@ public class BytecodeInterpreter {
                 }
                 //将常量池中的long、double类型的数据推送至栈顶
                 case Bytecodes.LDC2_W:{
-                    System.out.println("执行指令: LDC2_W");
+                    logger.info("执行指令: LDC2_W");
                     int operand = code.getUnsignedShort();
                     int tag = methodInfo.getBelongKlass().getConstantPool().getTag()[operand];
                     if(ConstantPool.JVM_CONSTANT_Long == tag){
-                        long l = (long) methodInfo.getBelongKlass().getConstantPool().getDataMap().get(tag);
-
+                        long l = (long) methodInfo.getBelongKlass().getConstantPool().getDataMap().get(operand);
+                        javaFrame.getStack().push(new StackValue(BasicType.T_LONG, l));
                     }else if(ConstantPool.JVM_CONSTANT_Double == tag){
-                        double d = (double) methodInfo.getBelongKlass().getConstantPool().getDataMap().get(tag);
-
+                        double d = (double) methodInfo.getBelongKlass().getConstantPool().getDataMap().get(operand);
+                        //将double压入栈，有些特殊
+                        javaFrame.getStack().pushDouble(d);
                     }else {
                         throw new Error("格式不支持");
                     }
+                    break;
+                }
+                //dstore_1是Java虚拟机指令集中的一条指令,
+                // 它用于将double类型的数据从操作栈顶弹出,并存储到局部变量表的第二个slot(下标为1)中
+                case Bytecodes.DSTORE_1:{
+                    logger.info("执行指令: DSTORE_1");
+                    StackValue[] values = javaFrame.getStack().popDouble();
 
+                    //存入布局变量表
+                    javaFrame.getLocals().add(1, values[1]);
+                    javaFrame.getLocals().add(2, values[0]);
+
+                    break;
+                }
+                //DLOAD_1是Java虚拟机指令集中的一条指令,它用于从局部变量表中加载double类型的变量到操作数栈顶。
+                case Bytecodes.DLOAD_1:{
+                    logger.info("执行指令: DLOAD_1");
+                    StackValue value1 = javaFrame.getLocals().get(1);
+                    StackValue value2 = javaFrame.getLocals().get(2);
+                    javaFrame.getStack().push(value1);
+                    javaFrame.getStack().push(value2);
+                    break;
                 }
                 default:{
                     throw new Error("无效指令");
