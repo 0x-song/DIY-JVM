@@ -1,8 +1,11 @@
 package com.sz.jvm.hotspot.src.share.vm.intepreter;
 
+import com.sz.jvm.hotspot.src.share.vm.classfile.BootClassLoader;
 import com.sz.jvm.hotspot.src.share.vm.classfile.DescriptorStream;
 import com.sz.jvm.hotspot.src.share.vm.oops.ConstantPool;
+import com.sz.jvm.hotspot.src.share.vm.oops.InstanceKlass;
 import com.sz.jvm.hotspot.src.share.vm.oops.MethodInfo;
+import com.sz.jvm.hotspot.src.share.vm.prims.JavaNativeInterface;
 import com.sz.jvm.hotspot.src.share.vm.runtime.Frame;
 import com.sz.jvm.hotspot.src.share.vm.runtime.JavaFrame;
 import com.sz.jvm.hotspot.src.share.vm.runtime.JavaThread;
@@ -155,6 +158,56 @@ public class BytecodeInterpreter {
                     }
                     break;
                 }
+                //调用静态方法
+                case Bytecodes.INVOKESTATIC:{
+                    logger.info("执行指令: INVOKESTATIC");
+                    int operand = code.getUnsignedShort();
+                    String className = methodInfo.getBelongKlass().getConstantPool().getClassNameByMethodInfo(operand);
+                    String methodName = methodInfo.getBelongKlass().getConstantPool().getMethodNameByMethodInfo(operand);
+                    String descriptorName = methodInfo.getBelongKlass().getConstantPool().getDescriptorNameByMethodInfo(operand);
+                    System.out.println(className + ":::::" + methodName + ":::::" + descriptorName);
+                    if(className.startsWith("java")){
+                        DescriptorStream descriptorStream = new DescriptorStream(descriptorName);
+                        descriptorStream.parseMethod();
+                        Object[] params = descriptorStream.getParameterValues(javaFrame);
+                        Class[] paramClass = descriptorStream.getParamsType();
+                        try {
+                            Class clazz = Class.forName(className.replace('/','.'));
+                            Method method = clazz.getMethod(methodName, paramClass);
+                            if(BasicType.T_VOID == descriptorStream.getReturnElement().getType()){
+                                method.invoke(clazz, params);
+                            }else {
+                                descriptorStream.push(method.invoke(clazz, params), javaFrame);
+                            }
+                        } catch (ClassNotFoundException e) {
+                            throw new RuntimeException(e);
+                        } catch (NoSuchMethodException e) {
+                            throw new RuntimeException(e);
+                        } catch (InvocationTargetException e) {
+                            throw new RuntimeException(e);
+                        } catch (IllegalAccessException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }else {
+                        //自定义的类
+                        InstanceKlass klass = BootClassLoader.findLoadedClass(className.replace('/', '.'));
+                        if(null == klass){
+                            System.out.println("\t 开始加载未加载的类:" + className);
+                            klass = BootClassLoader.loadKlass(className.replace('/','.'));
+                        }
+                        MethodInfo methodID = JavaNativeInterface.getMethodID(klass, methodName, descriptorName);
+                        if(null == methodID){
+                            throw new Error("不存在的方法: " + methodName + "#" + descriptorName);
+                        }
+
+                        // 方法重复调用会出错。因为程序计数器上次执行完指向的是尾部
+                        methodID.getAttributes().get(0).getCode().reset();
+
+                        JavaNativeInterface.callStaticMethod(methodID);
+                    }
+
+                    break;
+                }
                 //将常量池中的long、double类型的数据推送至栈顶
                 case Bytecodes.LDC2_W:{
                     logger.info("执行指令: LDC2_W");
@@ -191,6 +244,118 @@ public class BytecodeInterpreter {
                     StackValue value2 = javaFrame.getLocals().get(2);
                     javaFrame.getStack().push(value1);
                     javaFrame.getStack().push(value2);
+                    break;
+                }
+                case Bytecodes.ICONST_0:{
+                    logger.info("执行指令: ICONST_0");
+                    javaFrame.getStack().push(new StackValue(BasicType.T_INT, 0));
+                    break;
+                }
+                //将整数常量1加载到操作数栈顶
+                case Bytecodes.ICONST_1:{
+                    logger.info("执行指令: ICONST_1");
+                    javaFrame.getStack().push(new StackValue(BasicType.T_INT, 1));
+                    break;
+                }
+                case Bytecodes.ICONST_2:{
+                    logger.info("执行指令: ICONST_2");
+                    javaFrame.getStack().push(new StackValue(BasicType.T_INT, 2));
+                    break;
+                }
+                case Bytecodes.ICONST_3:{
+                    logger.info("执行指令: ICONST_3");
+                    javaFrame.getStack().push(new StackValue(BasicType.T_INT, 3));
+                    break;
+                }
+                case Bytecodes.ICONST_4:{
+                    logger.info("执行指令: ICONST_4");
+                    javaFrame.getStack().push(new StackValue(BasicType.T_INT, 4));
+                    break;
+                }
+                case Bytecodes.ICONST_5:{
+                    logger.info("执行指令: ICONST_5");
+                    javaFrame.getStack().push(new StackValue(BasicType.T_INT, 5));
+                    break;
+                }
+                //用于将int类型的值从操作数栈顶弹出,并将其存入局部变量表的第一个位置(下标为0)
+                case Bytecodes.ISTORE_0:{
+                    logger.info("执行指令：ISTORE_0");
+                    //取出栈顶元素
+                    StackValue stackValue = javaFrame.getStack().pop();
+
+                    //存入局部变量表
+                    javaFrame.getLocals().add(0, stackValue);
+                    break;
+                }
+                //它用于将int类型的数据从操作数栈顶弹出,并存储到局部变量表的第二个slot(下标为1)中
+                case Bytecodes.ISTORE_1:{
+                    logger.info("执行指令：ISTORE_1");
+                    //取出栈顶元素
+                    StackValue stackValue = javaFrame.getStack().pop();
+
+                    //存入局部变量表
+                    javaFrame.getLocals().add(1, stackValue);
+                    break;
+                }
+                case Bytecodes.ISTORE_2: {
+                    logger.info("执行指令: ISTORE_2");
+
+                    // 取出栈顶元素
+                    StackValue value = javaFrame.getStack().pop();
+
+                    // 存入局部变量表
+                    javaFrame.getLocals().add(2, value);
+
+                    break;
+                }
+                case Bytecodes.ISTORE_3: {
+                    logger.info("执行指令: ISTORE_3");
+
+                    // 取出栈顶元素
+                    StackValue value = javaFrame.getStack().pop();
+
+                    // 存入局部变量表
+                    javaFrame.getLocals().add(3, value);
+
+                    break;
+                }
+                //它用于将局部变量表中下标为0的int变量加载到操作数栈顶。
+                case Bytecodes.ILOAD_0:{
+                    // 取出局部变量表的数据
+                    StackValue value = javaFrame.getLocals().get(0);
+
+                    // 压入栈
+                    javaFrame.getStack().push(value);
+
+                    break;
+                }
+                //它用于将局部变量表中下标为1的int变量加载到操作数栈顶。
+                case Bytecodes.ILOAD_1:{
+                    // 取出局部变量表的数据
+                    StackValue value = javaFrame.getLocals().get(1);
+
+                    // 压入栈
+                    javaFrame.getStack().push(value);
+
+                    break;
+                }
+                case Bytecodes.IADD:{
+
+                    StackValue value1 = javaFrame.getStack().pop();
+                    StackValue value2 = javaFrame.getStack().pop();
+                    if (value1.getType() != BasicType.T_INT || value2.getType() != BasicType.T_INT) {
+                        System.out.println("不匹配的数据类型");
+
+                        throw new Error("不匹配的数据类型");
+                    }
+
+                    // 运算
+                    int ret = (int)value1.getData() + (int)value2.getData();
+                    System.out.println("执行指令: IADD，运行结果: " + ret);
+                    // 压入栈
+                    javaFrame.getStack().push(new StackValue(BasicType.T_INT, ret));
+
+
                     break;
                 }
                 default:{

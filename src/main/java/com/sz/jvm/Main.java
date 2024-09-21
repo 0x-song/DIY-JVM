@@ -16,7 +16,8 @@ import com.sz.jvm.hotspot.src.share.vm.runtime.Threads;
 public class Main {
 
 //    private static final String className = "com.sz.jvm.example.HelloWorld";
-    private static final String className = "com.sz.jvm.example.basic.PrintDouble";
+//    private static final String className = "com.sz.jvm.example.basic.PrintDouble";
+    private static final String className = "com.sz.jvm.example.operation.Add";
 
     public static void main(String[] args) {
         createVM();

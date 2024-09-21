@@ -33,7 +33,7 @@ public class BootClassLoader {
         BootClassLoader.mainKlass = mainKlass;
     }
 
-    private static InstanceKlass loadKlass(String className) {
+    public static InstanceKlass loadKlass(String className) {
 
         return loadKlass(className, true);
     }
@@ -65,5 +65,9 @@ public class BootClassLoader {
     private static InstanceKlass findLoadedKlass(String name) {
 
         return klassLoaderData.get(name);
+    }
+
+    public static InstanceKlass findLoadedClass(String className) {
+        return klassLoaderData.get(className);
     }
 }

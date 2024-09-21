@@ -2,6 +2,7 @@ package com.sz.jvm.hotspot.src.share.vm.classfile;
 
 import com.sz.jvm.hotspot.src.share.vm.oops.DescriptorInfo;
 import com.sz.jvm.hotspot.src.share.vm.runtime.JavaFrame;
+import com.sz.jvm.hotspot.src.share.vm.runtime.StackValue;
 import com.sz.jvm.hotspot.src.share.vm.utilities.BasicType;
 import lombok.Data;
 
@@ -144,5 +145,34 @@ public class DescriptorStream {
         }
 
         return types;
+    }
+
+    public void push(Object o, JavaFrame javaFrame) {
+        switch (returnElement.getType()) {
+            case BasicType.T_CHAR:
+                javaFrame.getStack().push(new StackValue(BasicType.T_CHAR, (char) o));
+
+                break;
+            case BasicType.T_INT:
+                javaFrame.getStack().push(new StackValue(BasicType.T_INT, (int) o));
+
+                break;
+            case BasicType.T_OBJECT:
+                javaFrame.getStack().push(new StackValue(BasicType.T_OBJECT, o));
+
+                break;
+            case BasicType.T_LONG:
+                javaFrame.getStack().push(new StackValue(BasicType.T_LONG, (int) o));
+
+                break;
+            case BasicType.T_DOUBLE:
+                javaFrame.getStack().push(new StackValue(BasicType.T_DOUBLE, (int) o));
+
+                break;
+            case BasicType.T_ARRAY:
+                throw new Error("数组类型，未作处理");
+            default:
+                throw new Error("无法识别的参数类型");
+        }
     }
 }

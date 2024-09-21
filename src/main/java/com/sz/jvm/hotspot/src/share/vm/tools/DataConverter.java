@@ -72,4 +72,10 @@ public class DataConverter {
 
         return byteRet;
     }
+
+    public static Object bytesToLong(byte[] data) {
+        ByteBuffer buffer = ByteBuffer.wrap(data, 0, 8);
+
+        return buffer.getLong();
+    }
 }
